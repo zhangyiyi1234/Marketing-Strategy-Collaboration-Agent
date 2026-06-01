@@ -1,0 +1,9 @@
+setuptools>=69,<81
+crewai==0.76.2
+crewai-tools==0.13.2
+pydantic==2.9.2
+mysql-connector-python==9.1.0
+fastapi==0.115.0
+uvicorn==0.31.0
+redis==5.2.0
+celery==5.4.0

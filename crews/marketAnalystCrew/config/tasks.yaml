@@ -1,0 +1,6 @@
+research_task:
+    description: >
+      围绕客户提供的{customer_domain}，深入分析其产品和主要竞争对手，挖掘关键趋势与相关洞察，确保收集到任何有价值的信息（限定2024年内）。当前合作项目概述如下：{project_description}。
+    expected_output: >
+      针对客户、客户产品以及竞争对手的全面报告，包括关键指标、市场偏好、定位策略与受众参与度分析。
+    agent: lead_market_analyst

@@ -1,0 +1,27 @@
+project_understanding_task:
+  description: >
+    详细了解{project_description}的项目背景和目标受众。审阅提供的材料并收集所需的其他信息。
+  expected_output: >
+    包含项目细节和目标受众简介的全面总结。
+  agent: chief_marketing_strategist
+
+marketing_strategy_task:
+  description: >
+    基于客户的{customer_domain}和{project_description}，制定全面的营销战略。综合研究任务与项目理解任务中的关键洞察，以构建高质量的战略方案。
+  expected_output: >
+    一份详尽的营销战略文件，包含目标、目标受众、关键信息和推荐策略，确保涵盖名称、策略、推广渠道和关键绩效指标。
+  agent: chief_marketing_strategist
+
+campaign_idea_task:
+  description: >
+    为{project_description}构思创新的营销活动方案。确保创意独特且具吸引力，与整体营销战略保持一致。
+  expected_output: >
+    提供5个活动方案，每个方案附简要说明及预期效果。
+  agent: creative_content_creator
+
+copy_creation_task:
+  description: >
+    根据批准的{project_description}活动方案编写营销文案。确保内容吸引人、清晰易懂，并适配目标受众。
+  expected_output: >
+    每个活动方案的营销文案。
+  agent: creative_content_creator

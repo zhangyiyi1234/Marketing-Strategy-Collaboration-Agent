@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crew Flow 控制台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #0b1020;
+      --bg1: #121a2e;
+      --card: rgba(30, 41, 59, 0.72);
+      --card-border: rgba(148, 163, 184, 0.12);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #818cf8;
+      --accent-dim: #6366f1;
+      --glow: rgba(99, 102, 241, 0.35);
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --err: #f87171;
+      --radius: 14px;
+      --font: "DM Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.22), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(56, 189, 248, 0.12), transparent 50%),
+        linear-gradient(165deg, var(--bg0) 0%, var(--bg1) 45%, #0a0f18 100%);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: clamp(1rem, 3vw, 2rem);
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    header h1 {
+      font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 36rem;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid var(--card-border);
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--muted);
+    }
+    .badge a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .badge a:hover { text-decoration: underline; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    @media (min-width: 920px) {
+      .grid { grid-template-columns: 1fr 1.05fr; align-items: start; }
+    }
+
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.35rem;
+      box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.55);
+    }
+    .card h2 {
+      margin: 0 0 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0.85rem 0 0.35rem;
+    }
+    label:first-of-type { margin-top: 0; }
+
+    input, textarea, select {
+      width: 100%;
+      font: inherit;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    textarea { min-height: 140px; resize: vertical; line-height: 1.55; }
+    .field-hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1.1rem;
+    }
+    button {
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
+      border: 1px solid transparent;
+      transition: transform 0.12s, opacity 0.15s, background 0.15s;
+    }
+    button:active:not(:disabled) { transform: scale(0.98); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      box-shadow: 0 8px 24px -8px var(--glow);
+    }
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(1.06);
+    }
+    .btn-ghost {
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--text);
+      border-color: rgba(148, 163, 184, 0.25);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: rgba(51, 65, 85, 0.45);
+    }
+    .btn-danger {
+      background: rgba(248, 113, 113, 0.12);
+      color: #fecaca;
+      border-color: rgba(248, 113, 113, 0.35);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(248, 113, 113, 0.2);
+    }
+    .btn-inline {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+    }
+
+    .job-panel {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      margin-bottom: 1rem;
+    }
+    .job-id {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      word-break: break-all;
+      flex: 1;
+      min-width: 0;
+      color: #e2e8f0;
+    }
+    .status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.35rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+    }
+    .status-none { color: var(--muted); border-color: rgba(148, 163, 184, 0.25); }
+    .status-run { color: var(--warn); background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.35); }
+    .status-ok { color: var(--ok); background: rgba(52, 211, 153, 0.1); border-color: rgba(52, 211, 153, 0.35); }
+    .status-err { color: var(--err); background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.35); }
+
+    .subgrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 520px) {
+      .subgrid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .events {
+      max-height: 200px;
+      overflow: auto;
+      padding: 0.5rem 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+      margin-top: 0.5rem;
+    }
+    .event {
+      font-size: 0.78rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.5rem;
+    }
+    .event time { font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+    .event span { color: #cbd5e1; }
+
+    pre {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.55;
+      background: rgba(10, 15, 26, 0.85);
+      color: #cbd5e1;
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      overflow: auto;
+      max-height: min(52vh, 520px);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      left: 1.25rem;
+      max-width: 420px;
+      margin-left: auto;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.28s ease, opacity 0.28s ease;
+      z-index: 50;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.err { background: #450a0a; color: #fecaca; }
+    .toast.ok { background: #064e3b; color: #a7f3d0; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>Crew Flow 控制台</h1>
+        <p>与 FastAPI 后端 <code style="color:var(--accent);font-size:0.9em;">POST /api/crew</code>、<code style="color:var(--accent);font-size:0.9em;">GET /api/crew/{job_id}</code> 对齐。启动 Redis、Celery Worker 与本服务后即可使用。</p>
+      </div>
+      <div class="badges">
+        <span class="badge">同源挂载 <code>/test-ui/</code></span>
+        <span class="badge"><a href="/docs" target="_blank" rel="noopener">OpenAPI 文档</a></span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="form-title">
+        <h2 id="form-title">请求参数</h2>
+        <label for="base">API 根地址</label>
+        <input id="base" type="url" autocomplete="off" placeholder="http://127.0.0.1:8012" />
+        <p class="field-hint">从本页打开时会自动填为当前站点，便于与 <code>uvicorn</code> 端口一致。</p>
+
+        <label for="domain">customer_domain</label>
+        <input id="domain" type="text" value="https://www.emqx.com/zh" />
+
+        <label for="desc">project_description</label>
+        <textarea id="desc">EMQX是一种开源的分布式消息中间件，专注于处理物联网 (IoT) 场景下的大规模消息通信。它基于MQTT协议，能够实现高并发、低延迟的实时消息推送，支持设备之间、设备与服务器之间的双向通信。客户领域:分布式消息中间件解决方案,项目概述:创建一个全面的营销活动，以提高企业客户对 EMQX 服务的认识和采用。</textarea>
+
+        <div class="subgrid" style="margin-top:0.75rem">
+          <div>
+            <label for="interval">轮询间隔（秒）</label>
+            <select id="interval">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div>
+            <label for="manualJob">手动查询 job_id（可选）</label>
+            <input id="manualJob" type="text" placeholder="粘贴已有 UUID" />
+          </div>
+        </div>
+
+        <div class="row">
+          <button type="button" class="btn-primary" id="btnPost">启动作业</button>
+          <button type="button" class="btn-ghost" id="btnPoll">查询状态</button>
+          <button type="button" class="btn-ghost" id="btnAuto">自动轮询</button>
+          <button type="button" class="btn-danger" id="btnStop" disabled>停止轮询</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="out-title">
+        <h2 id="out-title">作业与响应</h2>
+        <div class="job-panel">
+          <div class="job-id" id="jobId" title="job_id">尚未创建作业</div>
+          <span class="status status-none" id="statusPill">—</span>
+          <button type="button" class="btn-ghost btn-inline" id="btnCopy" disabled>复制 ID</button>
+        </div>
+        <h2 style="margin-top:0">事件</h2>
+        <div class="events" id="events"><div class="event"><time>—</time><span>提交作业后将显示 Celery Flow 事件</span></div></div>
+        <h2 style="margin-top:1rem">原始 JSON</h2>
+        <pre id="out">等待请求…</pre>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      const $ = (id) => document.getElementById(id);
+      const out = $("out");
+      const eventsEl = $("events");
+      const statusPill = $("statusPill");
+      const jobEl = $("jobId");
+      const btnStop = $("btnStop");
+      const btnCopy = $("btnCopy");
+      const toast = $("toast");
+      let pollTimer = null;
+
+      function toastMsg(text, ok) {
+        toast.textContent = text;
+        toast.className = "toast show " + (ok ? "ok" : "err");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => { toast.classList.remove("show"); }, 3200);
+      }
+
+      function syncDefaultBase() {
+        const b = $("base");
+        if (!b.value.trim() && location.origin && location.origin !== "null") {
+          b.value = location.origin;
+        }
+      }
+
+      function baseUrl() {
+        const v = $("base").value.trim();
+        if (v) return v.replace(/\/$/, "");
+        if (location.origin && location.origin !== "null") return location.origin;
+        return "http://127.0.0.1:8012";
+      }
+
+      function currentJobId() {
+        const manual = $("manualJob").value.trim();
+        if (manual) return manual;
+        const t = jobEl.textContent.trim();
+        if (!t || t === "尚未创建作业") return "";
+        return t;
+      }
+
+      function setJobId(id) {
+        if (id) {
+          jobEl.textContent = id;
+          btnCopy.disabled = false;
+        }
+      }
+
+      function setStatusPill(status) {
+        statusPill.className = "status ";
+        if (!status || status === "—") {
+          statusPill.textContent = "—";
+          statusPill.classList.add("status-none");
+          return;
+        }
+        statusPill.textContent = status;
+        if (status === "COMPLETE") statusPill.classList.add("status-ok");
+        else if (status === "ERROR") statusPill.classList.add("status-err");
+        else statusPill.classList.add("status-run");
+      }
+
+      function renderEvents(list) {
+        eventsEl.textContent = "";
+        if (!Array.isArray(list) || list.length === 0) {
+          const row = document.createElement("div");
+          row.className = "event";
+          const t = document.createElement("time");
+          t.textContent = "—";
+          const s = document.createElement("span");
+          s.textContent = "暂无事件";
+          row.appendChild(t);
+          row.appendChild(s);
+          eventsEl.appendChild(row);
+          return;
+        }
+        list.forEach((e) => {
+          const row = document.createElement("div");
+          row.className = "event";
+          const t = document.createElement("time");
+          t.textContent = e && e.timestamp != null ? String(e.timestamp) : "—";
+          const s = document.createElement("span");
+          s.textContent = e && e.data != null ? String(e.data) : "";
+          row.appendChild(t);
+          row.appendChild(s);
+          eventsEl.appendChild(row);
+        });
+      }
+
+      function log(obj) {
+        out.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+      }
+
+      function setLoading(btn, loading, label) {
+        if (!btn._label) btn._label = btn.textContent;
+        btn.disabled = loading;
+        btn.textContent = loading ? (label || "请稍候…") : btn._label;
+      }
+
+      async function postCrew() {
+        const url = baseUrl() + "/api/crew";
+        const body = {
+          customer_domain: $("domain").value.trim(),
+          project_description: $("desc").value.trim(),
+        };
+        const btn = $("btnPost");
+        setLoading(btn, true, "提交中…");
+        try {
+          const r = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(body),
+          });
+          const text = await r.text();
+          let data;
+          try { data = JSON.parse(text); } catch { data = text; }
+          log({ http: r.status, body: data });
+          if (r.ok && data && data.job_id) {
+            setJobId(data.job_id);
+            $("manualJob").value = "";
+            setStatusPill("运行中");
+            renderEvents([]);
+            toastMsg("作业已创建", true);
+          } else {
+            toastMsg("创建失败: HTTP " + r.status, false);
+          }
+        } catch (e) {
+          log(String(e));
+          toastMsg(String(e), false);
+        } finally {
+          setLoading(btn, false);
+        }
+      }
+
+      async function getStatus(silent) {
+        const id = currentJobId();
+        if (!id) {
+          if (!silent) toastMsg("请先启动作业或填写 job_id", false);
+          return null;
+        }
+        const url = baseUrl() + "/api/crew/" + encodeURIComponent(id);
+        try {
+          const r = await fetch(url, { headers: { Accept: "application/json" } });
+          const text = await r.text();
+          let data;
+          try { data = JSON.parse(text); } catch { data = text; }
+          log({ http: r.status, body: data });
+          if (typeof data === "object" && data) {
+            if (data.status) setStatusPill(data.status);
+            if (Array.isArray(data.events)) renderEvents(data.events);
+          }
+          if (!silent && r.status === 404) toastMsg("未找到作业（检查 MySQL / job_id）", false);
+          return data;
+        } catch (e) {
+          log(String(e));
+          if (!silent) toastMsg(String(e), false);
+          return null;
+        }
+      }
+
+      function clearPollTimer() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
+      function stopPoll() {
+        const had = !!pollTimer;
+        clearPollTimer();
+        btnStop.disabled = true;
+        if (had) toastMsg("已停止轮询", true);
+      }
+
+      async function autoPoll() {
+        clearPollTimer();
+        btnStop.disabled = true;
+        const id = currentJobId();
+        if (!id) {
+          toastMsg("请先启动作业或填写 job_id", false);
+          return;
+        }
+        btnStop.disabled = false;
+        const sec = Math.max(1, parseInt($("interval").value, 10) || 3);
+        await getStatus(true);
+        pollTimer = setInterval(async () => {
+          const data = await getStatus(true);
+          if (data && data.status && (data.status === "COMPLETE" || data.status === "ERROR")) {
+            stopPoll();
+          }
+        }, sec * 1000);
+        toastMsg("已开始轮询（每 " + sec + " 秒）", true);
+      }
+
+      $("btnPost").addEventListener("click", () => postCrew());
+      $("btnPoll").addEventListener("click", async () => {
+        const btn = $("btnPoll");
+        setLoading(btn, true, "查询中…");
+        try { await getStatus(false); } finally { setLoading(btn, false); }
+      });
+      $("btnAuto").addEventListener("click", () => autoPoll());
+      $("btnStop").addEventListener("click", () => stopPoll());
+
+      $("btnCopy").addEventListener("click", async () => {
+        const id = currentJobId();
+        if (!id) return;
+        try {
+          await navigator.clipboard.writeText(id);
+          toastMsg("已复制 job_id", true);
+        } catch {
+          toastMsg("复制失败", false);
+        }
+      });
+
+      $("manualJob").addEventListener("change", () => {
+        const id = $("manualJob").value.trim();
+        if (id) {
+          jobEl.textContent = id;
+          btnCopy.disabled = false;
+          setStatusPill("—");
+        }
+      });
+
+      syncDefaultBase();
+      setStatusPill("—");
+    })();
+  </script>
+</body>
+</html>
